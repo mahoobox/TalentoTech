@@ -1,0 +1,2 @@
+# TalentoTech
+Apuntes blockchain inter.
