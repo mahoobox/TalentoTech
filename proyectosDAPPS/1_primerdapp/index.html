@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="src/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"
+        type="application/javascript"></script>
+  </head>
+  <body class="bg-gray-200 p-8">
+
+    <div class="max-w-md mx-auto bg-white">
+      <div class="p-8">
+
+        <h1 class="text-2xl">Almacenar Texto Daap </h1>
+
+        <button id="conectarBtn" class="bg-blue-500 px-4 py-2 rounded text-white">
+          Conectar con Metamask
+        </button>
+
+        <div id="accountInfo" class="mb-4">
+          Cuenta conectada: <span id="accountSpan"></span>
+        </div>
+
+        <input type="text" id="textoInput" placeholder="Ingrese el texto que desea almacenar" class="w-full p-2 mb-4" rounded >
+
+        <button id="almacenarBtn" class="bg-green-500 px-4 py-2 rounded text-white">
+          Almacenar Texto
+        </button>
+
+        <button id="consultarBtn" class="bg-yellow-500 px-4 py-2 rounded text-white">
+          Consultar Texto
+        </button>
+
+        <div id="confirmacion" class="mt-4">hola</div>
+        <div id="textoAlmacenado" class="mt-2">hola</div>
+        <div id="hashTransaccsion" class="mt-2">hola</div>
+
+      </div>
+    </div>
+
+    
+  </body>
+  <script src="src/script.js"></script>
+</html>
