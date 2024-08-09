@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrato 1 - Cyberpunk Interface</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body class="bg-black text-white">
+    <div class="container mx-auto p-4">
+        <h1 class="text-4xl font-bold mb-4">Contrato 1: Gestión de Usuarios</h1>
+
+        <button id="connectButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Conectar con Metamask</button>
+
+        <div id="userActions" class="hidden">
+            <h2 class="text-2xl font-bold mt-6">Acciones del Usuario:</h2>
+
+            <div class="mt-4">
+                <label for="registerUser" class="block mb-2 text-sm font-medium text-gray-400">Registrar usuario:</label>
+                <input type="text" id="registerUser" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Dirección Ethereum">
+                <input type="text" id="registerName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Nombre del usuario">
+                <button id="registerButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-2">Registrar</button>
+            </div>
+
+            <div class="mt-4">
+                <label for="checkUser" class="block mb-2 text-sm font-medium text-gray-400">Comprobar usuario:</label>
+                <input type="text" id="checkUser" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Dirección Ethereum">
+                <button id="checkButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-2">Comprobar</button>
+                <div id="checkResult" class="mt-2"></div>
+            </div>
+
+            <div class="mt-4">
+                <label for="deleteUser" class="block mb-2 text-sm font-medium text-gray-400">Eliminar usuario:</label>
+                <input type="text" id="deleteUser" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="Dirección Ethereum">
+                <button id="deleteButton" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mt-2">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"
+        type="application/javascript"></script>
+    <script src="src/script.js"></script>
+</body>
+</html>

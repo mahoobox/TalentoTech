@@ -1,0 +1,21 @@
+/* Estilo Cyberpunk */
+body {
+    background-color: #000;
+    color: #0ff;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+input, button {
+    background-color: #111;
+    color: #0ff;
+    border: 2px solid #0ff;
+}
+
+button:hover {
+    background-color: #0ff;
+    color: #111;
+}
+
+h1, h2 {
+    text-shadow: 0 0 10px #0ff;
+}
