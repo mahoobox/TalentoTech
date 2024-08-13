@@ -22,24 +22,15 @@
         <div id="createNFTForm" class="hidden">
             <h2 class="text-xl font-bold mb-2">Crear NFT</h2>
             <div class="mb-3">
-                <label for="nftName" class="block text-gray-700 text-sm font-bold mb-2">Nombre del NFT:</label>
-                <input type="text" id="nftName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-            <div class="mb-3">
-                <label for="nftDescription" class="block text-gray-700 text-sm font-bold mb-2">Descripción del NFT:</label>
-                <textarea id="nftDescription" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-            </div>
-            <div class="mb-3">
-                <label for="nftImage" class="block text-gray-700 text-sm font-bold mb-2">Imagen del NFT (URL):</label>
-                <input type="text" id="nftImage" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <label for="nftURI" class="block text-gray-700 text-sm font-bold mb-2">URI del NFT:</label>
+                <input type="text" id="nftURI" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
             </div>
             <button id="createNFTButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Crear NFT</button>
         </div>
 
         <div id="nftList" class="hidden">
             <h2 class="text-xl font-bold mb-2">Tus NFTs</h2>
-            <div id="nftListItems" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                </div>
+            <ul id="nftListItems" class="list-disc"></ul>
         </div>
 
         <div id="transferNFTForm" class="hidden">
