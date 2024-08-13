@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFT App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">NFT App</h1>
+
+        <div class="mb-4">
+            <button id="connectWalletButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Conectar Billetera</button>
+        </div>
+
+        <div id="walletConnected" class="hidden">
+            <h2 class="text-xl font-bold mb-2">Billetera Conectada</h2>
+            <p id="walletAddress" class="text-gray-700"></p>
+        </div>
+
+        <div id="createNFTForm" class="hidden">
+            <h2 class="text-xl font-bold mb-2">Crear NFT</h2>
+            <div class="mb-3">
+                <label for="nftName" class="block text-gray-700 text-sm font-bold mb-2">Nombre del NFT:</label>
+                <input type="text" id="nftName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-3">
+                <label for="nftDescription" class="block text-gray-700 text-sm font-bold mb-2">Descripción del NFT:</label>
+                <textarea id="nftDescription" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="nftImage" class="block text-gray-700 text-sm font-bold mb-2">Imagen del NFT (URL):</label>
+                <input type="text" id="nftImage" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <button id="createNFTButton" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Crear NFT</button>
+        </div>
+
+        <div id="nftList" class="hidden">
+            <h2 class="text-xl font-bold mb-2">Tus NFTs</h2>
+            <div id="nftListItems" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                </div>
+        </div>
+
+        <div id="transferNFTForm" class="hidden">
+            <h2 class="text-xl font-bold mb-2">Transferir NFT</h2>
+            <div class="mb-3">
+                <label for="nftId" class="block text-gray-700 text-sm font-bold mb-2">ID del NFT:</label>
+                <input type="number" id="nftId" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-3">
+                <label for="recipientAddress" class="block text-gray-700 text-sm font-bold mb-2">Dirección del Receptor:</label>
+                <input type="text" id="recipientAddress" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <button id="transferNFTButton" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Transferir NFT</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script>
+        // Conexión a la Billetera
+        const connectWalletButton = document.getElementById('connectWalletButton');
+        const walletConnected = document.getElementById('walletConnected');
+        const walletAddress = document.getElementById('walletAddress');
+
+        // Crear NFT
+        const createNFTForm = document.getElementById('createNFTForm');
+        const nftURIInput = document.getElementById('nftURI');
+        const createNFTButton = document.getElementById('createNFTButton');
+
+        // Listar NFTs
+        const nftList = document.getElementById('nftList');
+        const nftListItems = document.getElementById('nftListItems');
+
+        // Transferir NFT
+        const transferNFTForm = document.getElementById('transferNFTForm');
+        const nftIdInput = document.getElementById('nftId');
+        const recipientAddressInput = document.getElementById('recipientAddress');
+        const transferNFTButton = document.getElementById('transferNFTButton');
+
+        // Dirección del contrato inteligente
+        const contractAddress = '0x286FA5c637e039f2c584E51933A6F1c6C1AEeF48';
+
+        // ABI del contrato inteligente
+        const contractABI = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "approve",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "destinatario",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "uri",
+                        "type": "string"
+                    }
+                ],
+                "name": "crearNFT",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "nombreColeccion",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "simboloColeccion",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "sender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    }
+                ],
+                "name": "ERC721IncorrectOwner",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "operator",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "ERC721InsufficientApproval",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "approver",
+                        "type": "address"
+                    }
+                ],
+                "name": "ERC721InvalidApprover",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "operator",
+                        "type": "address"
+                    }
+                ],
+                "name": "ERC721InvalidOperator",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    }
+                ],
+                "name": "ERC721InvalidOwner",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "receiver",
+                        "type": "address"
+                    }
+                ],
+                "name": "ERC721InvalidReceiver",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "sender",
+                        "type": "address"
+                    }
+                ],
+                "name": "ERC721InvalidSender",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "ERC721NonexistentToken",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnableInvalidOwner",
+                "type": "error"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnableUnauthorizedAccount",
+                "type": "error"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "approved",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Approval",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "operator",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "bool",
+                        "name": "approved",
+                        "type": "bool"
+                    }
+                ],
+                "name": "ApprovalForAll",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_fromTokenId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_toTokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "BatchMetadataUpdate",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "_tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "MetadataUpdate",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "previousOwner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnershipTransferred",
+                "type": "event"
+            },
+            {
+                "inputs": [],
+                "name": "renounceOwnership",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "safeTransferFrom",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "name": "safeTransferFrom",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "operator",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "bool",
+                        "name": "approved",
+                        "type": "bool"
+                    }
+                ],
+                "name": "setApprovalForAll",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Transfer",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferFrom",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "transferOwnership",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "getApproved",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "usuario",
+                        "type": "address"
+                    }
+                ],
+                "name": "getNTFsusuario",
+                "outputs": [
+                    {
+                        "internalType": "uint256[]",
+                        "name": "",
+                        "type": "uint256[]"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "operator",
+                        "type": "address"
+                    }
+                ],
+                "name": "isApprovedForAll",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "name",
+                "outputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "ownerOf",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "bytes4",
+                        "name": "interfaceId",
+                        "type": "bytes4"
+                    }
+                ],
+                "name": "supportsInterface",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "symbol",
+                "outputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "tokenId",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "tokenURI",
+                "outputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        let provider;
+        let signer;
+        let contract;
+
+        connectWalletButton.addEventListener('click', connectWallet);
+        createNFTButton.addEventListener('click', createNFT);
+
+        async function connectWallet() {
+            // Solicitar acceso a la billetera
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send('eth_requestAccounts', []);
+            signer = provider.getSigner();
+            walletAddress.textContent = await signer.getAddress();
+
+            // Mostrar la billetera conectada
+            walletConnected.classList.remove('hidden');
+            connectWalletButton.classList.add('hidden');
+
+            // Inicializar el contrato
+            contract = new ethers.Contract(contractAddress, contractABI, signer);
+
+            // Mostrar el formulario para crear NFT
+            createNFTForm.classList.remove('hidden');
+
+            // Mostrar el formulario para transferir NFT
+            transferNFTForm.classList.remove('hidden');
+
+            // Obtener los NFTs del usuario
+            await loadNFTs();
+        }
+
+        async function createNFT() {
+            const nftURI = nftURIInput.value;
+            if (nftURI) {
+                try {
+                    const tx = await contract.crearNFT(await signer.getAddress(), nftURI);
+                    await tx.wait();
+                    console.log('NFT creado con éxito:', tx.hash);
+                    // Actualizar la lista de NFTs
+                    await loadNFTs();
+                    // Limpiar el input del URI
+                    nftURIInput.value = '';
+                } catch (error) {
+                    console.error('Error al crear NFT:', error);
+                }
+            } else {
+                console.error('Por favor ingrese un URI válido.');
+            }
+        }
+
+        async function loadNFTs() {
+            // Obtener los NFTs del usuario
+            const nfts = await contract.getNTFsusuario(await signer.getAddress());
+
+            // Limpiar la lista de NFTs
+            nftListItems.innerHTML = '';
+
+            // Mostrar la lista de NFTs
+            if (nfts.length > 0) {
+                nftList.classList.remove('hidden');
+                nfts.forEach(nftId => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `NFT ID: ${nftId}`;
+                    nftListItems.appendChild(listItem);
+                });
+            } else {
+                nftList.classList.add('hidden');
+            }
+        }
+
+        // Agregar función para transferir NFT
+        transferNFTButton.addEventListener('click', transferNFT);
+
+        async function transferNFT() {
+            const nftId = nftIdInput.value;
+            const recipientAddress = recipientAddressInput.value;
+
+            if (nftId && recipientAddress) {
+                try {
+                    const tx = await contract.transferFrom(await signer.getAddress(), recipientAddress, nftId);
+                    await tx.wait();
+                    console.log('NFT transferido con éxito:', tx.hash);
+                    // Actualizar la lista de NFTs
+                    await loadNFTs();
+                    // Limpiar los inputs
+                    nftIdInput.value = '';
+                    recipientAddressInput.value = '';
+                } catch (error) {
+                    console.error('Error al transferir NFT:', error);
+                }
+            } else {
+                console.error('Por favor ingrese un ID de NFT y una dirección de receptor válidos.');
+            }
+        }
+    </script>
+</body>
+</html>
