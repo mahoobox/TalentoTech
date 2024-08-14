@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECOENERGY</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"
+        type="application/javascript"></script>
+</head>
+<body class="bg-gray-900 text-white font-inter min-h-screen flex flex-col items-center justify-center px-4">
+    <div class="container mx-auto max-w-3xl rounded-lg shadow-md p-8">
+        <h1 class="text-3xl font-bold mb-4 text-center">ECOENERGY</h1>
+
+        <div id="wallet-section" class="mb-4">
+            <button id="connect-wallet" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Connect Wallet</button>
+            <p id="wallet-address" class="mt-2 text-gray-400">Wallet Address: Not Connected</p>
+        </div>
+
+        <div id="balance-section" class="mb-4 hidden">
+            <h2 class="text-xl font-bold mb-2">Your ECOENERGY Balance</h2>
+            <p id="balance" class="text-2xl font-bold">0 ECOENERGY</p>
+        </div>
+
+        <div class="flex flex-col space-y-4">
+            <div id="buy-section" class="hidden">
+                <h2 class="text-xl font-bold mb-2">Buy ECOENERGY</h2>
+                <input type="number" id="buy-amount" placeholder="Enter Amount" class="w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:shadow-outline">
+                <button id="buy-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Buy</button>
+            </div>
+
+            <div id="transfer-section" class="hidden">
+                <h2 class="text-xl font-bold mb-2">Transfer ECOENERGY</h2>
+                <input type="text" id="transfer-recipient" placeholder="Recipient Address" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:shadow-outline">
+                <input type="number" id="transfer-amount" placeholder="Enter Amount" class="w-full px-3 py-2 border rounded-md focus:outline-none focus:shadow-outline">
+                <button id="transfer-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Transfer</button>
+            </div>
+        </div>
+
+        <div id="token-info-section" class="mb-4">
+            <h2 class="text-xl font-bold mb-2">Token Information</h2>
+            <p class="mb-1">Total Supply: <span id="total-supply">0</span> ECOENERGY</p>
+            <p>Token Price: <span id="token-price">0</span> ETH</p>
+        </div>
+
+    </div>
+
+    <script>
+        const contractAddress = '0x8fC0aDa806cfd97fB884F752c0c8ae522adAcEDb';
+        const abi = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Approval",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "approve",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "buyEnergytokens",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "newPrice",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "setTokenPrice",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Transfer",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "sender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferFrom",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "admin",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    }
+                ],
+                "name": "allowance",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [
+                    {
+                        "internalType": "uint8",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "name",
+                "outputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "symbol",
+                "outputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "tokenPrice",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        let provider;
+        let signer;
+        let contract;
+
+        // Connect to Metamask
+        const connectWalletButton = document.getElementById('connect-wallet');
+        connectWalletButton.addEventListener('click', async () => {
+            if (window.ethereum) {
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const walletAddress = accounts[0];
+                document.getElementById('wallet-address').textContent = `Wallet Address: ${walletAddress}`;
+                contract = new ethers.Contract(contractAddress, abi, signer);
+                await updateBalance();
+                enableActions();
+            } else {
+                alert('Please install Metamask');
+            }
+        });
+
+        // Update ECOENERGY balance
+        async function updateBalance() {
+            const balance = await contract.balanceOf(await signer.getAddress());
+            document.getElementById('balance').textContent = `${balance.toString()} ECOENERGY`;
+        }
+
+        // Enable actions after wallet connection
+        function enableActions() {
+            document.getElementById('balance-section').classList.remove('hidden');
+            document.getElementById('buy-section').classList.remove('hidden');
+            document.getElementById('transfer-section').classList.remove('hidden');
+        }
+
+        // Buy ECOENERGY
+        const buyButton = document.getElementById('buy-button');
+        buyButton.addEventListener('click', async () => {
+            const amount = document.getElementById('buy-amount').value;
+            try {
+                const tx = await contract.buyEnergytokens({ value: ethers.utils.parseEther(amount) });
+                await tx.wait();
+                await updateBalance();
+                alert('Tokens purchased successfully!');
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred during purchase.');
+            }
+        });
+
+        // Transfer ECOENERGY
+        const transferButton = document.getElementById('transfer-button');
+        transferButton.addEventListener('click', async () => {
+            const recipient = document.getElementById('transfer-recipient').value;
+            const amount = document.getElementById('transfer-amount').value;
+            try {
+                const tx = await contract.transfer(recipient, ethers.utils.parseUnits(amount, 18));
+                await tx.wait();
+                await updateBalance();
+                alert('Tokens transferred successfully!');
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred during transfer.');
+            }
+        });
+
+        // Update token information
+        async function updateTokenInfo() {
+            const totalSupply = await contract.totalSupply();
+            document.getElementById('total-supply').textContent = totalSupply.toString();
+            const tokenPrice = await contract.tokenPrice();
+            document.getElementById('token-price').textContent = ethers.utils.formatEther(tokenPrice);
+        }
+
+        // Initial token information update
+        updateTokenInfo();
+
+    </script>
+</body>
+</html>
