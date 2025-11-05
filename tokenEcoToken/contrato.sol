@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 // Con esta interface hacemos esto:
 // Defiminos el uso del estandar ERC20
@@ -20,13 +20,15 @@ interface IERC20 {
 
 // En este contrato vamos crear un token ERC20
 
-contract TTCOINtoken is IERC20 {
+import "./Ownable.sol";
+import "./ReentrancyGuard.sol";
+
+contract TTCOINtoken is IERC20, Ownable, ReentrancyGuard {
     string public constant name = "ECOENERGY";
     string public constant symbol = "ECOE";
     uint8 public constant decimals = 18;
     uint256 private _totalSupply = 100000 * 10 ** uint256(decimals); // 1 millón de tokens con 18 decimales
     
-    address public admin;
     uint public tokenPrice = 100; // * * * * * * * NUEVA LÍNEA * * * * * 
 
     mapping(address => uint256) private _balances;
@@ -34,7 +36,6 @@ contract TTCOINtoken is IERC20 {
 
     // Constructor que asigna todo el suministro inicial al creador del contrato.
     constructor() {
-        admin = msg.sender; // * * * * * * * NUEVA LÍNEA * * * * * 
         _balances[address(this)] = _totalSupply / 2; // ASIGNAMOS AL CONTRATO LA MITAD DE TOKENS PARA DAR LIQUIDEZ
         _balances[msg.sender] = _totalSupply / 2 ; // ASIGNAMOS AL SENDER LA MITAD DE LOS TOKENS EMITIDOS
         emit Transfer(address(0), address(this), _balances[address(this)]); // * * * * * * * NUEVA LÍNEA * * * * * 
@@ -53,6 +54,7 @@ contract TTCOINtoken is IERC20 {
     
     // Función para transfierir una cantidad de tokens a una cuenta destinataria
     function transfer(address recipient, uint256 amount) external override returns (bool) {
+        require(recipient != address(0), "ERC20: transfer to the zero address");
         require(_balances[msg.sender] >= amount, "Saldo insuficiente");
         _balances[msg.sender] -= amount;
         _balances[recipient] += amount;
@@ -75,6 +77,7 @@ contract TTCOINtoken is IERC20 {
     
     // Transfiere una cantidad de tokens desde una cuenta remitente a una cuenta destinataria.
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
+        require(recipient != address(0), "ERC20: transfer to the zero address");
         require(_balances[sender] >= amount, "Saldo insuficiente");
         require(_allowances[sender][msg.sender] >= amount, "No permitido");
         
@@ -87,14 +90,13 @@ contract TTCOINtoken is IERC20 {
 
     // Funcion: Establecer nuevo precio de los tokens
     // * * * * * * * NUEVA FUNCIÓN * * * * * 
-    function setTokenPrice (uint newPrice) public {
-        require(msg.sender == admin, "Solo el admin puede cambiar el precio");
+    function setTokenPrice (uint newPrice) public onlyOwner {
         tokenPrice = newPrice;
     }
 
     // Función: Comprar tokens con ether
     // * * * * * * * NUEVA FUNCIÓN * * * * * 
-    function buyEnergytokens() public payable {
+    function buyEnergytokens() public payable nonReentrant {
         require(msg.value > 0, "Debes enviar algo de ether para comprar tokens");
 
         uint256 tokensToBuy = msg.value * tokenPrice;
@@ -107,4 +109,8 @@ contract TTCOINtoken is IERC20 {
     }
 
     // Function: Para que admin retire fondos del contrato
+    function withdraw() public onlyOwner {
+        (bool success, ) = payable(owner()).call{value: address(this).balance}("");
+        require(success, "Transfer failed.");
+    }
 }
